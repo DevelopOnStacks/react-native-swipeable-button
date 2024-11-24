@@ -1,7 +1,7 @@
 {
-  "name": "react-swipeable-button",
-  "version": "1.3.0",
-  "description": "A component to create swipeable button in react",
+  "name": "react-native-swipeable-button",
+  "version": "1.0.1",
+  "description": "A component to create swipeable button in react native",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "files": [
@@ -24,8 +24,8 @@
     }
   },
   "keywords": [
-    "react swipeable button",
-    "react swipe button",
+    "react native swipeable button",
+    "react native swipe button",
     "swipe button",
     "swipeable button",
     "swipeable",
