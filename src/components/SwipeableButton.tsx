@@ -1,11 +1,14 @@
-import React, { useRef, useState } from 'react';
-import { 
-  Animated, 
-  PanResponder, 
-  StyleSheet, 
-  Text, 
-  View, 
-  Dimensions 
+import React, { Component } from 'react';
+import {
+  View,
+  Text,
+  PanResponder,
+  Animated,
+  StyleSheet,
+  Dimensions,
+  PanResponderGestureState,
+  ViewStyle,
+  TextStyle,
 } from 'react-native';
 
 interface SwipeableButtonProps {
@@ -27,130 +30,221 @@ interface SwipeableButtonProps {
   borderRadius?: number;
 }
 
-const SwipeableButton: React.FC<SwipeableButtonProps> = ({
-  autoWidth = false,
-  circle = false,
-  disabled = false,
-  noAnimate = false,
-  width = 300,
-  height = 50,
-  text = "SLIDE",
-  text_unlocked = "UNLOCKED",
-  onSuccess,
-  onFailure,
-  sliderColor = "#16362d",
-  sliderTextColor = "#fff",
-  textColor = "#000",
-  sliderIconColor = "#fff",
-  backgroundColor = "#eee",
-  borderRadius = 30,
-}) => {
-  const [unlocked, setUnlocked] = useState(false);
-  const sliderLeft = useRef(new Animated.Value(0)).current;
-  const containerWidth = useRef(width - height).current;
+interface SwipeableButtonState {
+  unlocked: boolean;
+  dragX: Animated.Value;
+  containerWidth: number;
+  complete: boolean;
+}
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => !disabled && !unlocked,
-      onMoveShouldSetPanResponder: () => !disabled && !unlocked,
-      onPanResponderMove: (_, gestureState) => {
-        if (!unlocked) {
-          const newLeft = Math.max(0, Math.min(containerWidth, gestureState.dx));
-          sliderLeft.setValue(newLeft);
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (!unlocked && gestureState.dx > containerWidth * 0.9) {
-          Animated.timing(sliderLeft, {
-            toValue: containerWidth,
-            duration: noAnimate ? 0 : 200,
-            useNativeDriver: false,
-          }).start(() => {
-            setUnlocked(true);
-            onSuccess?.();
-          });
-        } else {
-          Animated.timing(sliderLeft, {
-            toValue: 0,
-            duration: noAnimate ? 0 : 200,
-            useNativeDriver: false,
-          }).start(() => onFailure?.());
-        }
-      },
-    })
-  ).current;
+export default class SwipeableButton extends Component<SwipeableButtonProps, SwipeableButtonState> {
+  private containerRef: View | null = null;
+  private maxDragDistance: number = 0;
 
-  const resetButton = () => {
-    setUnlocked(false);
-    Animated.timing(sliderLeft, {
-      toValue: 0,
-      duration: noAnimate ? 0 : 200,
-      useNativeDriver: false,
-    }).start();
+  constructor(props: SwipeableButtonProps) {
+    super(props);
+    this.state = {
+      unlocked: false,
+      dragX: new Animated.Value(0),
+      containerWidth: 0,
+      complete: false,
+    };
+  }
+
+  componentDidMount() {
+    this.state.dragX.addListener(({ value }) => {
+      if (value >= this.maxDragDistance * 0.9 && !this.state.complete) {
+        this.setState({ complete: true }, this.onSwiped);
+      }
+    });
+  }
+
+  componentWillUnmount() {
+    this.state.dragX.removeAllListeners();
+  }
+
+  private panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => !this.state.unlocked && !this.props.disabled,
+    onMoveShouldSetPanResponder: () => !this.state.unlocked && !this.props.disabled,
+    onPanResponderGrant: () => {},
+    onPanResponderMove: (_, gestureState: PanResponderGestureState) => {
+      const newValue = Math.min(Math.max(0, gestureState.dx), this.maxDragDistance);
+      this.state.dragX.setValue(newValue);
+    },
+    onPanResponderRelease: (_, gestureState: PanResponderGestureState) => {
+      if (gestureState.dx < this.maxDragDistance * 0.9) {
+        Animated.spring(this.state.dragX, {
+          toValue: 0,
+          useNativeDriver: true,
+        }).start(() => {
+          if (this.props.onFailure) {
+            this.props.onFailure();
+          }
+        });
+      } else {
+        Animated.spring(this.state.dragX, {
+          toValue: this.maxDragDistance,
+          useNativeDriver: true,
+        }).start();
+      }
+    },
+  });
+
+  private onSwiped = () => {
+    if (this.props.onSuccess) {
+      this.props.onSuccess();
+    }
+    this.setState({ unlocked: true });
   };
 
-  return (
-    <View
-      style={[
-        styles.container,
-        {
-          width: autoWidth ? "100%" : width,
-          height,
-          borderRadius: circle ? height / 2 : borderRadius,
-          backgroundColor: backgroundColor,
-        },
-      ]}
-    >
-      <Animated.View
-        {...panResponder.panHandlers}
-        style={[
-          styles.slider,
-          {
-            width: height,
-            height,
-            borderRadius: circle ? height / 2 : borderRadius,
-            backgroundColor: sliderColor,
-            transform: [{ translateX: sliderLeft }],
-          },
-        ]}
+  private onLayout = (event: any) => {
+    const { width } = event.nativeEvent.layout;
+    this.maxDragDistance = width - (this.props.height || 50);
+    this.setState({ containerWidth: width });
+  };
+
+  private getText = () => {
+    return this.state.unlocked
+      ? this.props.text_unlocked || 'UNLOCKED'
+      : this.props.text || 'SLIDE';
+  };
+
+  public buttonReset = () => {
+    if (!this.state.unlocked) return;
+    this.setState({ unlocked: false, complete: false }, () => {
+      Animated.spring(this.state.dragX, {
+        toValue: 0,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
+  public buttonComplete = () => {
+    if (this.state.unlocked) return;
+    Animated.spring(this.state.dragX, {
+      toValue: this.maxDragDistance,
+      useNativeDriver: true,
+    }).start(() => {
+      this.setState({ complete: true }, this.onSwiped);
+    });
+  };
+
+  render() {
+    const {
+      width = 300,
+      height = 50,
+      circle = false,
+      disabled = false,
+      autoWidth = false,
+      sliderColor = '#16362d',
+      backgroundColor = '#eee',
+      borderRadius = 30,
+      sliderTextColor = '#fff',
+      sliderIconColor = '#fff',
+      textColor = '#000',
+    } = this.props;
+
+    const containerStyle: ViewStyle = {
+      width: autoWidth ? '100%' : width,
+      height: height,
+      backgroundColor: backgroundColor,
+      borderRadius: circle ? height / 2 : 5,
+      overflow: 'hidden',
+      opacity: disabled ? 0.6 : 1,
+    };
+
+    const sliderStyle: ViewStyle = {
+      position: 'absolute',
+      width: '100%',
+      height: '100%',
+      backgroundColor: sliderColor,
+      borderRadius: circle ? borderRadius : 0,
+    };
+
+    const arrowStyle: ViewStyle = {
+      position: 'absolute',
+      right: 22,
+      width: 8,
+      height: 8,
+      borderTopWidth: 2,
+      borderRightWidth: 2,
+      borderColor: sliderIconColor,
+      transform: [{ rotate: '45deg' }],
+    };
+
+    return (
+      <View
+        style={[styles.container, containerStyle]}
+        onLayout={this.onLayout}
+        ref={ref => (this.containerRef = ref)}
       >
-        <Text style={[styles.sliderText, { color: sliderTextColor }]}>
-          {unlocked ? text_unlocked : text}
-        </Text>
-      </Animated.View>
-      {!unlocked && (
-        <Text style={[styles.buttonText, { color: textColor }]}>
-          {text}
-        </Text>
-      )}
-    </View>
-  );
-};
+        <Text style={[styles.text, { color: textColor }]}>{this.getText()}</Text>
+        <Animated.View
+          {...this.panResponder.panHandlers}
+          style={[
+            sliderStyle,
+            {
+              transform: [
+                {
+                  translateX: this.state.dragX.interpolate({
+                    inputRange: [0, this.maxDragDistance],
+                    outputRange: [-this.state.containerWidth + height, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <View style={styles.sliderContent}>
+            <Text style={[styles.sliderText, { color: sliderTextColor }]}>
+              {this.getText()}
+            </Text>
+            <View style={arrowStyle} />
+            <View
+              style={[
+                styles.sliderCircle,
+                { backgroundColor: sliderColor, width: height },
+              ]}
+            />
+          </View>
+        </Animated.View>
+      </View>
+    );
+  }
+}
 
 const styles = StyleSheet.create({
   container: {
-    position: "relative",
-    justifyContent: "center",
-    overflow: "hidden",
+    position: 'relative',
   },
-  slider: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    justifyContent: "center",
-    alignItems: "center",
+  text: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    fontFamily: 'System',
+    letterSpacing: 1,
+    fontSize: 14,
+  },
+  sliderContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   sliderText: {
-    fontSize: 16,
-    fontWeight: "bold",
+    position: 'absolute',
+    width: '100%',
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    fontFamily: 'System',
+    letterSpacing: 1,
+    fontSize: 14,
   },
-  buttonText: {
-    position: "absolute",
-    alignSelf: "center",
-    fontSize: 16,
-    fontWeight: "bold",
+  sliderCircle: {
+    position: 'absolute',
+    right: 0,
+    height: '100%',
+    borderRadius: 100,
   },
 });
-
-export default SwipeableButton;
-
