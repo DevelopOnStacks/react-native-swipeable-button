@@ -1,3 +1,1 @@
-import SwipeableButton from "./components/SwipeableButton";
-
-export {SwipeableButton}
+export { default as SwipeableButton } from './components/SwipeableButton';
