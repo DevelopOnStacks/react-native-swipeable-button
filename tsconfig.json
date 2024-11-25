@@ -21,13 +21,6 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "esnext",
-    "declaration": true,
-    "declarationMap": true,
-    "outDir": "./lib",
-    "rootDir": "./src",
-    "isolatedModules": true
-  },
-  "include": ["src"],
-  "exclude": ["node_modules", "lib", "example"]
+    "target": "esnext"
+  }
 }
