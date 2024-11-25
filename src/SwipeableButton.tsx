@@ -30,7 +30,7 @@ if (Platform.OS === 'ios') {
   MacOSModule = NativeModules.MacOSModule;
 }
 
-type VibrancyEffect = 
+export type VibrancyEffect = 
   | 'none' 
   | 'light' 
   | 'dark' 
@@ -48,7 +48,7 @@ type VibrancyEffect =
   | 'contentBackground' 
   | 'underWindowBackground';
 
-interface SwipeableButtonProps {
+export interface SwipeableButtonProps {
   autoWidth?: boolean;
   circle?: boolean;
   disabled?: boolean;
@@ -72,7 +72,7 @@ interface SwipeableButtonProps {
   testID?: string;
 }
 
-interface SwipeableButtonState {
+export interface SwipeableButtonState {
   unlocked: boolean;
   dragX: Animated.Value;
   containerWidth: number;
