@@ -2,9 +2,7 @@
 
 <!-- [![npm downloads](https://img.shields.io/npm/dm/react-swipeable-button.svg?style=flat-square)](https://npm-stat.com/charts.html?package=react-swipeable-button) -->
 
-### A npm pacakge for Swipeable button in react native
-
-Check all the changes in the [Release Notes](https://github.com/DevelopOnStacks/react-native-swipeable-button/releases)
+A npm package for Swipeable button in react native
 
 ## Installs
 
