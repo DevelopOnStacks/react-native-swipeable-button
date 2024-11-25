@@ -1,21 +1,27 @@
 {
   "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
-    "declaration": true,
+    "baseUrl": "./",
+    "paths": {
+      "react-native-swipeable-unlock": ["./src/index"]
+    },
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
     "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
     "jsx": "react",
-    "lib": ["es5", "es2015", "es2016", "dom", "esnext"],
-    // "types": ["node"],
-    "module": "es2015",
+    "lib": ["esnext"],
+    "module": "esnext",
     "moduleResolution": "node",
-    "noImplicitAny": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noImplicitUseStrict": false,
+    "noStrictGenericChecks": false,
+    "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
-    "outDir": "dist/esm",
-    "sourceMap": true,
+    "noUnusedParameters": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
     "strict": true,
-    "target": "es6"
-  },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-
-
+    "target": "esnext"
+  }
 }
