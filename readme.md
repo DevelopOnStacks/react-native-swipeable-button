@@ -25,21 +25,23 @@ yarn add react-native-swipeable-button
 #### General Usage
 
 ```jsx
-import { SwipeableButton } from 'react-native-swipeable-unlock';
+import { SwipeableButton } from 'react-native-swipeable-button';
 
-// ...
+// Basic
+<SwipeableButton
+  text="Swipe to unlock"
+  onSuccess={() => console.log('¡Unlocked!')}
+/>
 
-const App = () => {
-  return (
-    <SwipeableButton
-      onSuccess={() => console.log('Unlocked!')}
-      text="SLIDE TO UNLOCK"
-      text_unlocked="UNLOCKED!"
-      sliderColor="#007AFF"
-      backgroundColor="#E5E5EA"
-    />
-  );
-};
+// Advanced
+<SwipeableButton
+  text="Swipte to unlock"
+  text_unlocked="¡Unlocked!"
+  onSuccess={() => console.log('¡Unlocked!')}
+  iosHapticFeedback={Platform.OS === 'ios'}
+  windowsAccentColor={Platform.OS === 'windows' ? '#0078D7' : undefined}
+  macOSVibrancyEffect={Platform.OS === 'macos' ? 'light' : undefined}
+/>
 ```
 
 ## Methods
@@ -78,6 +80,9 @@ buttonRef.current?.buttonComplete();
 | sliderTextColor | string | '#fff' | Color of text on slider |
 | textColor | string | '#000' | Color of background text |
 | borderRadius | number | 30 | Border radius when circle prop is true |
+| iosHapticFeedback | boolean | false | ios Haptic Feedback |
+| windowsAccentColor | boolean | false | windows Accent Color |
+| macOSVibrancyEffect | boolean | false | macOS Vibrancy Effect |
 
 ## Contribution
 
